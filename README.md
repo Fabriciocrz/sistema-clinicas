@@ -7,4 +7,4 @@ Sistema em Python para cadastro de clínicas, pacientes e profissionais, agendam
 ## Integrantes
 
 - Fabricio Cruz
-- Filipe Pilon
+- Filipe Hernandes Azenha Pilon
