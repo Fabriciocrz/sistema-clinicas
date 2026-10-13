@@ -1,11 +1,15 @@
-from abc import ABC
+from abc import ABC, abstractmethod
+
 
 class Pessoa(ABC):
-
+    @abstractmethod
     def __init__(self, nome: str, celular: str, cpf: str):
-        self.__nome = nome
-        self.__celular = celular
-        self.__cpf = cpf
+        self.__nome = None
+        self.__celular = None
+        self.__cpf = None
+        self.nome = nome
+        self.celular = celular
+        self.cpf = cpf
 
     @property
     def nome(self) -> str:
@@ -13,7 +17,8 @@ class Pessoa(ABC):
 
     @nome.setter
     def nome(self, nome: str) -> None:
-        self.__nome = nome
+        if isinstance(nome, str):
+            self.__nome = nome
 
     @property
     def celular(self) -> str:
@@ -21,7 +26,8 @@ class Pessoa(ABC):
 
     @celular.setter
     def celular(self, celular: str) -> None:
-        self.__celular = celular
+        if isinstance(celular, str):
+            self.__celular = celular
 
     @property
     def cpf(self) -> str:
@@ -29,4 +35,5 @@ class Pessoa(ABC):
 
     @cpf.setter
     def cpf(self, cpf: str) -> None:
-        self.__cpf = cpf
+        if isinstance(cpf, str):
+            self.__cpf = cpf
