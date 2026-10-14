@@ -1,7 +1,7 @@
 from limite.tela_sistema import TelaSistema
-#from controle.controlador_paciente import ControladorPaciente
-#from controle.controlador_profissional import ControladorProfissional
-#from controle.controlador_clinica import ControladorClinica
+from controle.controlador_paciente import ControladorPaciente
+from controle.controlador_profissional import ControladorProfissional
+from controle.controlador_clinica import ControladorClinica
 from controle.controlador_tipo_atendimento import ControladorTipoAtendimento
 #from controle.controlador_atendimento import ControladorAtendimento
 #from controle.controlador_pagamento import ControladorPagamento
@@ -10,9 +10,9 @@ from controle.controlador_tipo_atendimento import ControladorTipoAtendimento
 class ControladorSistema:
    
     def __init__(self):
-        #self.__controlador_paciente = ControladorPaciente(self)
-        #self.__controlador_profissional = ControladorProfissional(self)
-        #self.__controlador_clinica = ControladorClinica(self)
+        self.__controlador_paciente = ControladorPaciente(self)
+        self.__controlador_profissional = ControladorProfissional(self)
+        self.__controlador_clinica = ControladorClinica(self)
         self.__controlador_tipo_atendimento = ControladorTipoAtendimento(self)
         #self.__controlador_atendimento = ControladorAtendimento(self)
         #self.__controlador_pagamento = ControladorPagamento(self)
@@ -57,13 +57,13 @@ class ControladorSistema:
             funcao_escolhida()
 
     def cadastra_pacientes(self):
-        pass
+        self.__controlador_paciente.abre_tela()
 
     def cadastra_profissionais(self):
-        pass
+        self.__controlador_profissional.abre_tela()
 
     def cadastra_clinicas(self):
-        pass
+        self.__controlador_clinica.abre_tela()
 
     def cadastra_tipos_atendimento(self):
         self.__controlador_tipo_atendimento.abre_tela()
