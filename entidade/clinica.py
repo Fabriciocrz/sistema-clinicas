@@ -6,8 +6,6 @@ from entidade.profissional import Profissional
 class Clinica:
     """Clínica que agrega profissionais."""
 
-    __MINUTOS_POR_DIA = 24 * 60
-
     def __init__(self, nome: str, cidade: str, descricao: str,
                  horario_abertura: time, horario_fechamento: time, codigo: int):
         self.__profissionais: list[Profissional] = []
@@ -90,29 +88,6 @@ class Clinica:
     def profissionais(self) -> list[Profissional]:
         # Cópia: a lista interna só é alterada por incluir/excluir.
         return list(self.__profissionais)
-
-    def esta_aberta(self, inicio: time, fim: time) -> bool:
-        """Regra de negócio: o intervalo [inicio, fim] cabe no funcionamento?
-        Aceita clínicas que viram a noite (ex.: abre 18:00, fecha 08:00) e
-        atendimentos que passam da meia-noite (ex.: 23:30 às 00:30).
-        Abertura igual ao fechamento significa clínica aberta 24 horas."""
-        abre = self.__minutos(self.__horario_abertura)
-        fecha = self.__minutos(self.__horario_fechamento)
-        if abre == fecha:
-            return True
-        if fecha < abre:                      # funcionamento vira a noite
-            fecha += self.__MINUTOS_POR_DIA
-        comeco = self.__minutos(inicio)
-        termino = self.__minutos(fim)
-        if termino <= comeco:                 # atendimento passa da meia-noite
-            termino += self.__MINUTOS_POR_DIA
-        if comeco < abre:                     # começa na madrugada do dia seguinte
-            comeco += self.__MINUTOS_POR_DIA
-            termino += self.__MINUTOS_POR_DIA
-        return abre <= comeco and termino <= fecha
-
-    def __minutos(self, horario: time) -> int:
-        return horario.hour * 60 + horario.minute
 
     def incluir_profissional(self, profissional: Profissional) -> None:
         if not isinstance(profissional, Profissional):

@@ -1,185 +1,153 @@
-from entidade.pagamento import Pagamento
-from entidade.atendimento import Atendimento
 from entidade.pagamento_cartao import PagamentoCartao
 from entidade.pagamento_dinheiro import PagamentoDinheiro
 from entidade.pagamento_pix import PagamentoPix
 from exceptions.pagamento_apos_atendimento_exception import PagamentoAposAtendimentoException
 from limite.tela_pagamento import TelaPagamento
 
-# Dados inválidos e a Regra 3 (data do pagamento), as únicas que Atendimento
-# lança ao incluir ou trocar um pagamento. TypeError indica defeito e não é capturado.
-ERROS_DE_NEGOCIO = (ValueError, PagamentoAposAtendimentoException)
-
 
 class ControladorPagamento:
-    """Controla os pagamentos. Não guarda lista própria: cada pagamento
-    pertence a um Atendimento (agregação Atendimento 1 --- * Pagamento).
-    As regras (data e valor) ficam em Atendimento."""
 
     def __init__(self, controlador_sistema):
-        self.__tela_pagamento = TelaPagamento(self)
         self.__controlador_sistema = controlador_sistema
+        self.__tela_pagamento = TelaPagamento(self)
 
-    def retornar(self) -> None:
-        # O controle volta ao menu principal quando abre_tela() termina.
-        pass
+    def retornar(self):
+        self.__controlador_sistema.abre_tela()
 
-    def abre_tela(self) -> None:
-        opcoes = {
-            1: self.incluir_pagamento,
-            2: self.alterar_pagamento,
-            3: self.excluir_pagamento,
-            4: self.listar_pagamentos,
-        }
+    def abre_tela(self):
+        lista_opcoes = {1: self.incluir_pagamento, 2: self.alterar_pagamento,
+                        3: self.excluir_pagamento, 4: self.listar_pagamentos,
+                        0: self.retornar}
+
         while True:
-            opcao = self.__tela_pagamento.mostra_tela_opcoes()
-            if opcao == 0:
-                self.retornar()
+            opcao_escolhida = self.__tela_pagamento.mostra_tela_opcoes()
+            funcao_escolhida = lista_opcoes[opcao_escolhida]
+            funcao_escolhida()
+
+    def incluir_pagamento(self):
+        self.__controlador_sistema.controlador_atendimento.listar_atendimentos()
+        codigo_atendimento = self.__tela_pagamento.seleciona_atendimento()
+        atendimento = self.__controlador_sistema.controlador_atendimento.pega_atendimento_por_codigo(codigo_atendimento)
+
+        if atendimento == None:
+            self.__tela_pagamento.mostra_mensagem("Atendimento não encontrado")
+            return
+
+        if len(atendimento.pagamentos) >= atendimento.numero_parcelas:
+            self.__tela_pagamento.mostra_mensagem("Todas as parcelas desse atendimento já foram pagas")
+            return
+
+        dados = self.__tela_pagamento.pega_dados_pagamento()
+
+        for pagamento in atendimento.pagamentos:
+            if pagamento.codigo == dados["codigo"]:
+                self.__tela_pagamento.mostra_mensagem("Já existe um pagamento com esse código nesse atendimento")
                 return
-            opcoes[opcao]()
 
-    def incluir_pagamento(self) -> None:
-        atendimento = self.__seleciona_atendimento()
-        if atendimento is None:
+        try:
+            if dados["data"] > atendimento.data:
+                raise PagamentoAposAtendimentoException()
+        except PagamentoAposAtendimentoException as erro:
+            self.__tela_pagamento.mostra_mensagem(str(erro))
             return
 
-        if round(atendimento.valor_restante() * 100) <= 0:
-            self.__tela_pagamento.mostra_mensagem("ATENÇÃO: este atendimento já está quitado.")
+        valor = atendimento.valor_parcela()
+
+        if dados["modalidade"] == 1:
+            pagamento = PagamentoDinheiro(dados["data"], valor, dados["codigo"])
+        elif dados["modalidade"] == 2:
+            pagamento = PagamentoCartao(dados["data"], valor, dados["codigo"], dados["numero_cartao"], dados["bandeira"])
+        else:
+            pagamento = PagamentoPix(dados["data"], valor, dados["codigo"], dados["cpf_pagador"])
+
+        atendimento.incluir_pagamento(pagamento)
+        self.__tela_pagamento.mostra_mensagem(f"Pagamento de R$ {valor:.2f} incluído. Restante: R$ {atendimento.valor_restante():.2f}")
+
+    def alterar_pagamento(self):
+        self.__controlador_sistema.controlador_atendimento.listar_atendimentos()
+        codigo_atendimento = self.__tela_pagamento.seleciona_atendimento()
+        atendimento = self.__controlador_sistema.controlador_atendimento.pega_atendimento_por_codigo(codigo_atendimento)
+
+        if atendimento == None:
+            self.__tela_pagamento.mostra_mensagem("Atendimento não encontrado")
+            return
+
+        for pagamento in atendimento.pagamentos:
+            self.__tela_pagamento.mostra_pagamento({"codigo": pagamento.codigo, "modalidade": pagamento.modalidade(),
+                                                    "data": pagamento.data.strftime("%d/%m/%Y"), "valor_pago": pagamento.valor_pago})
+
+        codigo = self.__tela_pagamento.seleciona_pagamento()
+        pagamento_escolhido = None
+        for pagamento in atendimento.pagamentos:
+            if pagamento.codigo == codigo:
+                pagamento_escolhido = pagamento
+
+        if pagamento_escolhido == None:
+            self.__tela_pagamento.mostra_mensagem("Pagamento não encontrado")
             return
 
         dados = self.__tela_pagamento.pega_dados_pagamento()
-        if self.__codigo_em_uso(dados["codigo"]):
-            self.__tela_pagamento.mostra_mensagem("ATENÇÃO: já existe um pagamento com esse código.")
-            return
+
+        for pagamento in atendimento.pagamentos:
+            if pagamento.codigo == dados["codigo"] and pagamento != pagamento_escolhido:
+                self.__tela_pagamento.mostra_mensagem("Já existe um pagamento com esse código nesse atendimento")
+                return
 
         try:
-            atendimento.incluir_pagamento(self.__cria_pagamento(dados))
-        except ERROS_DE_NEGOCIO as erro:
-            self.__tela_pagamento.mostra_mensagem(f"ATENÇÃO: {erro}")
-            return
-        self.__tela_pagamento.mostra_mensagem("Pagamento incluído com sucesso.")
-        self.__tela_pagamento.mostra_resumo(self.__resumo(atendimento))
-
-    def alterar_pagamento(self) -> None:
-        atendimento = self.__seleciona_atendimento()
-        if atendimento is None:
-            return
-        pagamento = self.__seleciona_pagamento(atendimento)
-        if pagamento is None:
+            if dados["data"] > atendimento.data:
+                raise PagamentoAposAtendimentoException()
+        except PagamentoAposAtendimentoException as erro:
+            self.__tela_pagamento.mostra_mensagem(str(erro))
             return
 
-        dados = self.__tela_pagamento.pega_dados_pagamento()
-        if self.__codigo_em_uso(dados["codigo"], ignorar=pagamento):
-            self.__tela_pagamento.mostra_mensagem("ATENÇÃO: já existe um pagamento com esse código.")
+        valor = pagamento_escolhido.valor_pago
+
+        if dados["modalidade"] == 1:
+            novo_pagamento = PagamentoDinheiro(dados["data"], valor, dados["codigo"])
+        elif dados["modalidade"] == 2:
+            novo_pagamento = PagamentoCartao(dados["data"], valor, dados["codigo"], dados["numero_cartao"], dados["bandeira"])
+        else:
+            novo_pagamento = PagamentoPix(dados["data"], valor, dados["codigo"], dados["cpf_pagador"])
+
+        atendimento.excluir_pagamento(pagamento_escolhido.codigo)
+        atendimento.incluir_pagamento(novo_pagamento)
+        self.__tela_pagamento.mostra_mensagem("Pagamento alterado")
+
+    def excluir_pagamento(self):
+        self.__controlador_sistema.controlador_atendimento.listar_atendimentos()
+        codigo_atendimento = self.__tela_pagamento.seleciona_atendimento()
+        atendimento = self.__controlador_sistema.controlador_atendimento.pega_atendimento_por_codigo(codigo_atendimento)
+
+        if atendimento == None:
+            self.__tela_pagamento.mostra_mensagem("Atendimento não encontrado")
             return
 
-        # A modalidade pode mudar (ex.: Pix -> Cartão), então o objeto é
-        # substituído; se o Model recusar, o pagamento antigo é mantido.
-        try:
-            atendimento.substituir_pagamento(pagamento.codigo, self.__cria_pagamento(dados))
-        except ERROS_DE_NEGOCIO as erro:
-            self.__tela_pagamento.mostra_mensagem(f"ATENÇÃO: {erro}")
-            return
-        self.__tela_pagamento.mostra_mensagem("Pagamento alterado com sucesso.")
+        for pagamento in atendimento.pagamentos:
+            self.__tela_pagamento.mostra_pagamento({"codigo": pagamento.codigo, "modalidade": pagamento.modalidade(),
+                                                    "data": pagamento.data.strftime("%d/%m/%Y"), "valor_pago": pagamento.valor_pago})
 
-    def excluir_pagamento(self) -> None:
-        atendimento = self.__seleciona_atendimento()
-        if atendimento is None:
-            return
-        pagamento = self.__seleciona_pagamento(atendimento)
-        if pagamento is None:
-            return
-
-        # O pagamento acabou de ser escolhido na lista deste atendimento, então
-        # a exclusão não tem como falhar: não há erro de negócio a tratar aqui.
-        atendimento.excluir_pagamento(pagamento.codigo)
-        self.__tela_pagamento.mostra_mensagem("Pagamento excluído com sucesso.")
-        self.__tela_pagamento.mostra_resumo(self.__resumo(atendimento))
-
-    def listar_pagamentos(self) -> None:
-        atendimento = self.__seleciona_atendimento()
-        if atendimento is None:
-            return
-        self.__lista_pagamentos_de(atendimento)
-        self.__tela_pagamento.mostra_resumo(self.__resumo(atendimento))
-
-    # --------------------------------------------------- métodos auxiliares
-
-    def __seleciona_atendimento(self) -> Atendimento | None:
-        """Lista os atendimentos, pede o código e devolve o atendimento (ou None)."""
-        controlador_atendimento = self.__controlador_sistema.controlador_atendimento
-        if not controlador_atendimento.atendimentos:
-            self.__tela_pagamento.mostra_mensagem("Nenhum atendimento cadastrado.")
-            return None
-        controlador_atendimento.listar_atendimentos()
-        atendimento = controlador_atendimento.pega_atendimento_por_codigo(
-            self.__tela_pagamento.seleciona_atendimento())
-        if atendimento is None:
-            self.__tela_pagamento.mostra_mensagem("ATENÇÃO: atendimento não encontrado.")
-        return atendimento
-
-    def __seleciona_pagamento(self, atendimento: Atendimento) -> Pagamento | None:
-        """Lista os pagamentos do atendimento, pede o código e devolve o pagamento (ou None)."""
-        if not atendimento.pagamentos:
-            self.__tela_pagamento.mostra_mensagem("Nenhum pagamento neste atendimento.")
-            return None
-        self.__lista_pagamentos_de(atendimento)
         codigo = self.__tela_pagamento.seleciona_pagamento()
         for pagamento in atendimento.pagamentos:
             if pagamento.codigo == codigo:
-                return pagamento
-        self.__tela_pagamento.mostra_mensagem("ATENÇÃO: pagamento não encontrado neste atendimento.")
-        return None
+                atendimento.excluir_pagamento(codigo)
+                self.__tela_pagamento.mostra_mensagem("Pagamento excluído")
+                return
 
-    def __resumo(self, atendimento: Atendimento) -> dict:
-        """Números puros para a tela formatar (o enunciado pede o paciente
-        no registro do pagamento e o cálculo do valor restante)."""
-        return {
-            "codigo_atendimento": atendimento.codigo,
-            "paciente": atendimento.paciente.nome,
-            "valor_total": atendimento.valor_total(),
-            "total_pago": atendimento.total_pago(),
-            "valor_restante": atendimento.valor_restante(),
-        }
-    
-    def __lista_pagamentos_de(self, atendimento: Atendimento) -> None:
-        if not atendimento.pagamentos:
-            self.__tela_pagamento.mostra_mensagem("Nenhum pagamento neste atendimento.")
+        self.__tela_pagamento.mostra_mensagem("Pagamento não encontrado")
+
+    def listar_pagamentos(self):
+        self.__controlador_sistema.controlador_atendimento.listar_atendimentos()
+        codigo_atendimento = self.__tela_pagamento.seleciona_atendimento()
+        atendimento = self.__controlador_sistema.controlador_atendimento.pega_atendimento_por_codigo(codigo_atendimento)
+
+        if atendimento == None:
+            self.__tela_pagamento.mostra_mensagem("Atendimento não encontrado")
             return
+
+        if len(atendimento.pagamentos) == 0:
+            self.__tela_pagamento.mostra_mensagem("Nenhum pagamento registrado nesse atendimento")
+            return
+
         for pagamento in atendimento.pagamentos:
-            dados = {
-                "codigo": pagamento.codigo,
-                "modalidade": pagamento.modalidade(),   # polimorfismo
-                "data": pagamento.data,
-                "valor_pago": pagamento.valor_pago,
-            }
-            # Campos próprios de cada modalidade (Dinheiro não tem nenhum).
-            if isinstance(pagamento, PagamentoCartao):
-                dados["numero_cartao"] = pagamento.numero_cartao
-                dados["bandeira"] = pagamento.bandeira
-            elif isinstance(pagamento, PagamentoPix):
-                dados["cpf_pagador"] = pagamento.cpf_pagador
-            self.__tela_pagamento.mostra_pagamento(dados)
-
-    def __codigo_em_uso(self, codigo: int, ignorar: Pagamento | None = None) -> bool:
-        """O código do pagamento deve ser único no sistema inteiro (regra que
-        envolve vários atendimentos, por isso fica no controlador que tem acesso a todos)."""
-        for atendimento in self.__controlador_sistema.controlador_atendimento.atendimentos:
-            for pagamento in atendimento.pagamentos:
-                if pagamento.codigo == codigo and pagamento is not ignorar:
-                    return True
-        return False
-
-    def __cria_pagamento(self, dados: dict) -> Pagamento:
-        """Cria a subclasse concreta conforme a chave de modalidade
-        ('dinheiro', 'cartao' ou 'pix') devolvida pela tela."""
-        modalidade = dados["modalidade"]
-        if modalidade == "cartao":
-            return PagamentoCartao(dados["data"], dados["valor_pago"], dados["codigo"],
-                                   dados["numero_cartao"], dados["bandeira"])
-        if modalidade == "pix":
-            return PagamentoPix(dados["data"], dados["valor_pago"], dados["codigo"],
-                                dados["cpf_pagador"])
-        if modalidade == "dinheiro":
-            return PagamentoDinheiro(dados["data"], dados["valor_pago"], dados["codigo"])
-        raise ValueError(f"Modalidade de pagamento desconhecida: {modalidade}")
+            self.__tela_pagamento.mostra_pagamento({"codigo": pagamento.codigo, "modalidade": pagamento.modalidade(),
+                                                    "data": pagamento.data.strftime("%d/%m/%Y"), "valor_pago": pagamento.valor_pago})

@@ -42,13 +42,12 @@ class ControladorClinica:
             self.__tela_clinica.mostra_mensagem("ATENÇÃO: já existe clínica com esse código!")
             return
 
-        # Qualquer par de horários é aceito: abrir às 18:00 e fechar às 08:00
-        # significa que a clínica funciona durante a noite.
-        try:
-            clinica = Clinica(**dados)            # a entidade valida cada campo
-        except ValueError as erro:
-            self.__tela_clinica.mostra_mensagem(f"ATENÇÃO: {erro}")
+        if dados["horario_abertura"] >= dados["horario_fechamento"]:
+            self.__tela_clinica.mostra_mensagem("ATENÇÃO: o horário de abertura deve ser antes do horário de fechamento!")
             return
+
+        clinica = Clinica(dados["nome"], dados["cidade"], dados["descricao"],
+                          dados["horario_abertura"], dados["horario_fechamento"], dados["codigo"])
         self.__clinicas.append(clinica)
         self.__tela_clinica.mostra_mensagem("Clínica incluída com sucesso!")
 
@@ -65,28 +64,16 @@ class ControladorClinica:
                 "ATENÇÃO: já existe outra clínica com esse código!")
             return
 
-        # Uma clínica provisória valida os campos e, com a regra do Model
-        # (esta_aberta), confere se os atendimentos já marcados continuam
-        # dentro do novo horário. A clínica real só muda se tudo estiver certo.
-        try:
-            nova = Clinica(**novos_dados)
-        except ValueError as erro:
-            self.__tela_clinica.mostra_mensagem(f"ATENÇÃO: {erro}")
-            return
-        atendimentos = self.__controlador_sistema.controlador_atendimento.atendimentos
-        if any(atendimento.clinica is clinica
-               and not nova.esta_aberta(atendimento.horario_inicio, atendimento.horario_fim)
-               for atendimento in atendimentos):
-            self.__tela_clinica.mostra_mensagem(
-                "ATENÇÃO: há atendimentos fora do novo horário de funcionamento.")
+        if novos_dados["horario_abertura"] >= novos_dados["horario_fechamento"]:
+            self.__tela_clinica.mostra_mensagem("ATENÇÃO: o horário de abertura deve ser antes do horário de fechamento!")
             return
 
-        clinica.nome = nova.nome
-        clinica.cidade = nova.cidade
-        clinica.descricao = nova.descricao
-        clinica.horario_abertura = nova.horario_abertura
-        clinica.horario_fechamento = nova.horario_fechamento
-        clinica.codigo = nova.codigo
+        clinica.nome = novos_dados["nome"]
+        clinica.cidade = novos_dados["cidade"]
+        clinica.descricao = novos_dados["descricao"]
+        clinica.horario_abertura = novos_dados["horario_abertura"]
+        clinica.horario_fechamento = novos_dados["horario_fechamento"]
+        clinica.codigo = novos_dados["codigo"]
         self.__tela_clinica.mostra_mensagem("Clínica alterada com sucesso!")
 
     def excluir_clinica(self) -> None:
