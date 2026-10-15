@@ -7,7 +7,7 @@ class ControladorProfissional:
 
     def __init__(self, controlador_sistema):
         self.__profissionais: list[Profissional] = []
-        self.__tela_profissional = TelaProfissional(self)
+        self.__tela_profissional = TelaProfissional()
         self.__controlador_sistema = controlador_sistema
 
     def retornar(self) -> None:

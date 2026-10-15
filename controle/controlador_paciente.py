@@ -8,7 +8,7 @@ class ControladorPaciente:
 
     def __init__(self, controlador_sistema):
         self.__pacientes: list[Paciente] = []
-        self.__tela_paciente = TelaPaciente(self)
+        self.__tela_paciente = TelaPaciente()
         self.__controlador_sistema = controlador_sistema
 
     def retornar(self) -> None:

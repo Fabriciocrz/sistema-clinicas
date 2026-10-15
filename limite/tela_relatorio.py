@@ -1,9 +1,5 @@
 class TelaRelatorio:
 
-    def __init__(self, controlador):
-        self.__controlador = controlador
-
-
     def le_numero_tela(self, mensagem=" ", numeros_validos=None):
         while True:
             valor_registrado = input(mensagem)

@@ -3,9 +3,6 @@ from datetime import time
 
 class TelaClinica:
 
-    def __init__(self, controlador):
-        self.__controlador = controlador
-
     def mostra_tela_opcoes(self) -> int:
         print("\n-------- CLÍNICAS --------")
         print("1 - Incluir clínica")

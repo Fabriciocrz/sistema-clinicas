@@ -9,7 +9,7 @@ class ControladorPagamento:
 
     def __init__(self, controlador_sistema):
         self.__controlador_sistema = controlador_sistema
-        self.__tela_pagamento = TelaPagamento(self)
+        self.__tela_pagamento = TelaPagamento()
 
     def retornar(self):
         self.__controlador_sistema.abre_tela()

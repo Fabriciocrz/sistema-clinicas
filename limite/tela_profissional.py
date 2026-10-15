@@ -1,10 +1,6 @@
 
 class TelaProfissional:
-    """Interface de console para as operações com profissionais."""
-
-    def __init__(self, controlador):
-        self.__controlador = controlador
-
+    
     def mostra_tela_opcoes(self) -> int:
         print("\n------- PROFISSIONAIS -------")
         print("1 - Incluir profissional")

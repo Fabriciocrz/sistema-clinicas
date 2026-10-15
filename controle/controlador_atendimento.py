@@ -9,7 +9,7 @@ class ControladorAtendimento:
     def __init__(self, controlador_sistema):
         self.__controlador_sistema = controlador_sistema
         self.__atendimentos = []
-        self.__tela_atendimento = TelaAtendimento(self)
+        self.__tela_atendimento = TelaAtendimento()
 
     @property
     def atendimentos(self) -> list:

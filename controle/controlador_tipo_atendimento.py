@@ -6,7 +6,7 @@ class ControladorTipoAtendimento:
     def __init__(self, controlador_sistema):
         self.__controlador_sistema = controlador_sistema
         self.__tipos_atendimento = []
-        self.__tela_tipo_atendimento = TelaTipoAtendimento(self)
+        self.__tela_tipo_atendimento = TelaTipoAtendimento()
 
     def retornar(self):
         self.__controlador_sistema.abre_tela()   
@@ -61,6 +61,10 @@ class ControladorTipoAtendimento:
             self.__tela_tipo_atendimento.mostra_mensagem("Tipo de atendimento não encontrado")
             return
         else:
+            for atendimento in self.__controlador_sistema.controlador_atendimento.atendimentos:
+                if atendimento.tipo_atendimento == tipo_atendimento:
+                    self.__tela_tipo_atendimento.mostra_mensagem("Tipo de atendimento em uso, não pode ser removido")
+                    return
             self.__tipos_atendimento.remove(tipo_atendimento)
             self.__tela_tipo_atendimento.mostra_mensagem("Tipo de atendimento removido")
 

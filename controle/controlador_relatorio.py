@@ -5,7 +5,7 @@ class ControladorRelatorio:
 
     def __init__(self, controlador_sistema):
         self.__controlador_sistema = controlador_sistema
-        self.__tela_relatorio = TelaRelatorio(self)
+        self.__tela_relatorio = TelaRelatorio()
 
     def retornar(self):
         self.__controlador_sistema.abre_tela()

@@ -17,7 +17,7 @@ class ControladorSistema:
         self.__controlador_atendimento = ControladorAtendimento(self)
         self.__controlador_pagamento = ControladorPagamento(self)
         self.__controlador_relatorio = ControladorRelatorio(self)
-        self.__tela_sistema = TelaSistema(self)
+        self.__tela_sistema = TelaSistema()
 
     @property
     def controlador_paciente(self):

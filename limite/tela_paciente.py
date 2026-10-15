@@ -3,10 +3,6 @@ from datetime import date, datetime
 
 
 class TelaPaciente:
-    """Interface de console para as operações com pacientes."""
-
-    def __init__(self, controlador):
-        self.__controlador = controlador
 
     def mostra_tela_opcoes(self) -> int:
         print("\n-------- PACIENTES --------")

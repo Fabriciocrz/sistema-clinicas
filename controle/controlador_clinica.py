@@ -7,7 +7,7 @@ class ControladorClinica:
 
     def __init__(self, controlador_sistema):
         self.__clinicas: list[Clinica] = []
-        self.__tela_clinica = TelaClinica(self)
+        self.__tela_clinica = TelaClinica()
         self.__controlador_sistema = controlador_sistema
 
     @property
