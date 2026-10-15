@@ -3,9 +3,9 @@ from controle.controlador_paciente import ControladorPaciente
 from controle.controlador_profissional import ControladorProfissional
 from controle.controlador_clinica import ControladorClinica
 from controle.controlador_tipo_atendimento import ControladorTipoAtendimento
-#from controle.controlador_atendimento import ControladorAtendimento
-#from controle.controlador_pagamento import ControladorPagamento
-#from controle.controlador_relatorio import ControladorRelatorio
+from controle.controlador_atendimento import ControladorAtendimento
+from controle.controlador_pagamento import ControladorPagamento
+from controle.controlador_relatorio import ControladorRelatorio
 
 class ControladorSistema:
    
@@ -14,9 +14,9 @@ class ControladorSistema:
         self.__controlador_profissional = ControladorProfissional(self)
         self.__controlador_clinica = ControladorClinica(self)
         self.__controlador_tipo_atendimento = ControladorTipoAtendimento(self)
-        #self.__controlador_atendimento = ControladorAtendimento(self)
-        #self.__controlador_pagamento = ControladorPagamento(self)
-        #self.__controlador_relatorio = ControladorRelatorio(self)
+        self.__controlador_atendimento = ControladorAtendimento(self)
+        self.__controlador_pagamento = ControladorPagamento(self)
+        self.__controlador_relatorio = ControladorRelatorio(self)
         self.__tela_sistema = TelaSistema(self)
 
     @property
@@ -69,13 +69,13 @@ class ControladorSistema:
         self.__controlador_tipo_atendimento.abre_tela()
 
     def cadastra_atendimentos(self):
-        pass
+        self.__controlador_atendimento.abre_tela()
 
     def cadastra_pagamentos(self):
-        pass
+        self.__controlador_pagamento.abre_tela()
 
     def abre_relatorios(self):
-        pass
+        self.__controlador_relatorio.abre_tela()
 
     def encerra_sistema(self):
         exit(0)

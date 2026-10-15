@@ -1,4 +1,5 @@
 class ForaDoHorarioDeFuncionamentoException(Exception):
 
     def __init__(self):
-        super().__init__("Não é possivel agendar, a clinica está fechada nesse horário")
+        self.mensagem = "Não é possível agendar, a clínica está fechada nesse horário"
+        super().__init__(self.mensagem)
