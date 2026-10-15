@@ -9,8 +9,6 @@ class PagamentoCartao(Pagamento):
     def __init__(self, data: date, valor_pago: float, codigo: int,
                  numero_cartao: str, bandeira: str):
         super().__init__(data, valor_pago, codigo)
-        self.__numero_cartao = None
-        self.__bandeira = None
         self.numero_cartao = numero_cartao
         self.bandeira = bandeira
 
@@ -38,6 +36,3 @@ class PagamentoCartao(Pagamento):
 
     def modalidade(self) -> str:
         return "Cartão"
-
-    def detalhes(self) -> dict:
-        return {"numero_cartao": self.__numero_cartao, "bandeira": self.__bandeira}

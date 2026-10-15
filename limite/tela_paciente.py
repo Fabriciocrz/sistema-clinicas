@@ -31,11 +31,11 @@ class TelaPaciente:
 
     def pega_dados_paciente(self) -> dict:
         print("\n-------- DADOS DO PACIENTE --------")
-        nome = self.__le_texto("Nome: ")
-        celular = self.__le_texto("Celular: ")
-        cpf = self.__le_cpf("CPF: ")
+        nome = input("Nome: ")
+        celular = input("Celular: ")
+        cpf = input("CPF: ").replace(".", "").replace("-", "")
         data_nascimento = self.__le_data("Data de nascimento (dd/mm/aaaa): ")
-        tem_responsavel = self.__le_booleano("Tem responsável? (s/n): ")
+        tem_responsavel = input("Tem responsável? (s/n): ").strip().lower() == "s"
         return {
             "nome": nome,
             "celular": celular,
@@ -55,44 +55,13 @@ class TelaPaciente:
         print(f"\n{mensagem}")
 
     def seleciona_paciente(self) -> str:
-        return self.__le_cpf("CPF do paciente: ")
+        return input("CPF do paciente: ").replace(".", "").replace("-", "")
 
-    # ---------- métodos auxiliares de leitura/validação ----------
+    # ---------- conversão de texto para data (papel da tela) ----------
 
-    @staticmethod
-    def __le_texto(mensagem: str) -> str:
-        while True:
-            valor = input(mensagem).strip()
-            if valor:
-                return valor
-            print("O valor não pode ser vazio.")
-
-    @staticmethod
-    def __le_cpf(mensagem: str) -> str:
-        while True:
-            cpf = input(mensagem).strip().replace(".", "").replace("-", "")
-            if cpf.isdigit() and len(cpf) == 11:
-                return cpf
-            print("CPF inválido. Digite os 11 dígitos.")
-
-    @staticmethod
-    def __le_data(mensagem: str) -> date:
+    def __le_data(self, mensagem: str) -> date:
         while True:
             try:
-                data = datetime.strptime(input(mensagem).strip(), "%d/%m/%Y").date()
-                if data > date.today():
-                    print("A data não pode estar no futuro.")
-                    continue
-                return data
+                return datetime.strptime(input(mensagem).strip(), "%d/%m/%Y").date()
             except ValueError:
                 print("Data inválida. Use o formato dd/mm/aaaa.")
-
-    @staticmethod
-    def __le_booleano(mensagem: str) -> bool:
-        while True:
-            resposta = input(mensagem).strip().lower()
-            if resposta in ("s", "sim"):
-                return True
-            if resposta in ("n", "nao", "não"):
-                return False
-            print("Responda com 's' ou 'n'.")

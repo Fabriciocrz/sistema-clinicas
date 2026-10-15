@@ -1,4 +1,5 @@
 from entidade.paciente import Paciente
+from exceptions.paciente_menor_de_idade_exception import PacienteMenorDeIdadeException
 from limite.tela_paciente import TelaPaciente
    
 
@@ -36,13 +37,11 @@ class ControladorPaciente:
             self.__tela_paciente.mostra_mensagem("ATENÇÃO: já existe um paciente com este CPF.")
             return
 
-        paciente = Paciente(
-            nome=dados["nome"],
-            celular=dados["celular"],
-            cpf=dados["cpf"],
-            data_nascimento=dados["data_nascimento"],
-            tem_responsavel=dados["tem_responsavel"],
-        )
+        try:
+            paciente = Paciente(**dados)          # a entidade valida cada campo
+        except ValueError as erro:
+            self.__tela_paciente.mostra_mensagem(f"ATENÇÃO: {erro}")
+            return
         self.__pacientes.append(paciente)
         self.__tela_paciente.mostra_mensagem("Paciente incluído com sucesso.")
 
@@ -59,11 +58,27 @@ class ControladorPaciente:
             self.__tela_paciente.mostra_mensagem("ATENÇÃO: já existe um paciente com este CPF.")
             return
 
-        paciente.nome = novos_dados["nome"]
-        paciente.celular = novos_dados["celular"]
-        paciente.cpf = novos_dados["cpf"]
-        paciente.data_nascimento = novos_dados["data_nascimento"]
-        paciente.tem_responsavel = novos_dados["tem_responsavel"]
+        try:
+            Paciente(**novos_dados)               # valida os dados sem tocar no paciente real
+        except ValueError as erro:
+            self.__tela_paciente.mostra_mensagem(f"ATENÇÃO: {erro}")
+            return
+
+        # Nova data de nascimento ou retirada do responsável podem violar a
+        # Regra 1 em atendimentos já registrados: Atendimento revalida ao
+        # receber o paciente de novo; se recusar, os dados antigos voltam.
+        dados_antigos = {campo: getattr(paciente, campo) for campo in novos_dados}
+        for campo, valor in novos_dados.items():
+            setattr(paciente, campo, valor)
+        try:
+            for atendimento in self.__controlador_sistema.controlador_atendimento.atendimentos:
+                if atendimento.paciente is paciente:
+                    atendimento.paciente = paciente
+        except PacienteMenorDeIdadeException as erro:
+            for campo, valor in dados_antigos.items():
+                setattr(paciente, campo, valor)
+            self.__tela_paciente.mostra_mensagem(f"ATENÇÃO: {erro}")
+            return
         self.__tela_paciente.mostra_mensagem("Paciente alterado com sucesso.")
 
     def excluir_paciente(self) -> None:

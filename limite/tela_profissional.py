@@ -28,11 +28,11 @@ class TelaProfissional:
 
     def pega_dados_profissional(self) -> dict:
         print("\n------- DADOS DO PROFISSIONAL -------")
-        nome = self.__le_texto("Nome: ")
-        celular = self.__le_texto("Celular: ")
-        cpf = self.__le_cpf("CPF: ")
-        especialidade = self.__le_texto("Especialidade: ")
-        registro_profissional = self.__le_texto("Registro profissional: ")
+        nome = input("Nome: ")
+        celular = input("Celular: ")
+        cpf = input("CPF: ").replace(".", "").replace("-", "")
+        especialidade = input("Especialidade: ")
+        registro_profissional = input("Registro profissional: ")
         return {
             "nome": nome,
             "celular": celular,
@@ -53,22 +53,4 @@ class TelaProfissional:
         print(f"\n{mensagem}")
 
     def seleciona_profissional(self) -> str:
-        return self.__le_cpf("CPF do profissional: ")
-
-    # ---------- métodos auxiliares de leitura/validação ----------
-
-    @staticmethod
-    def __le_texto(mensagem: str) -> str:
-        while True:
-            valor = input(mensagem).strip()
-            if valor:
-                return valor
-            print("O valor não pode ser vazio.")
-
-    @staticmethod
-    def __le_cpf(mensagem: str) -> str:
-        while True:
-            cpf = input(mensagem).strip().replace(".", "").replace("-", "")
-            if cpf.isdigit() and len(cpf) == 11:
-                return cpf
-            print("CPF inválido. Digite os 11 dígitos.")
+        return input("CPF do profissional: ").replace(".", "").replace("-", "")

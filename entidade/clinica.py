@@ -6,14 +6,10 @@ from entidade.profissional import Profissional
 class Clinica:
     """Clínica que agrega profissionais."""
 
+    __MINUTOS_POR_DIA = 24 * 60
+
     def __init__(self, nome: str, cidade: str, descricao: str,
                  horario_abertura: time, horario_fechamento: time, codigo: int):
-        self.__nome = None
-        self.__cidade = None
-        self.__descricao = None
-        self.__horario_abertura = None
-        self.__horario_fechamento = None
-        self.__codigo = None
         self.__profissionais: list[Profissional] = []
         self.nome = nome
         self.cidade = cidade
@@ -28,8 +24,11 @@ class Clinica:
 
     @nome.setter
     def nome(self, nome: str) -> None:
-        if isinstance(nome, str):
-            self.__nome = nome
+        if not isinstance(nome, str):
+            raise TypeError("O nome da clínica deve ser texto.")
+        if not nome.strip():
+            raise ValueError("O nome da clínica é obrigatório.")
+        self.__nome = nome.strip()
 
     @property
     def cidade(self) -> str:
@@ -37,8 +36,11 @@ class Clinica:
 
     @cidade.setter
     def cidade(self, cidade: str) -> None:
-        if isinstance(cidade, str):
-            self.__cidade = cidade
+        if not isinstance(cidade, str):
+            raise TypeError("A cidade da clínica deve ser texto.")
+        if not cidade.strip():
+            raise ValueError("A cidade da clínica é obrigatória.")
+        self.__cidade = cidade.strip()
 
     @property
     def descricao(self) -> str:
@@ -46,8 +48,11 @@ class Clinica:
 
     @descricao.setter
     def descricao(self, descricao: str) -> None:
-        if isinstance(descricao, str):
-            self.__descricao = descricao
+        if not isinstance(descricao, str):
+            raise TypeError("A descrição da clínica deve ser texto.")
+        if not descricao.strip():
+            raise ValueError("A descrição da clínica é obrigatória.")
+        self.__descricao = descricao.strip()
 
     @property
     def horario_abertura(self) -> time:
@@ -55,8 +60,9 @@ class Clinica:
 
     @horario_abertura.setter
     def horario_abertura(self, horario_abertura: time) -> None:
-        if isinstance(horario_abertura, time):
-            self.__horario_abertura = horario_abertura
+        if not isinstance(horario_abertura, time):
+            raise TypeError("O horário de abertura deve ser do tipo time.")
+        self.__horario_abertura = horario_abertura
 
     @property
     def horario_fechamento(self) -> time:
@@ -64,8 +70,9 @@ class Clinica:
 
     @horario_fechamento.setter
     def horario_fechamento(self, horario_fechamento: time) -> None:
-        if isinstance(horario_fechamento, time):
-            self.__horario_fechamento = horario_fechamento
+        if not isinstance(horario_fechamento, time):
+            raise TypeError("O horário de fechamento deve ser do tipo time.")
+        self.__horario_fechamento = horario_fechamento
 
     @property
     def codigo(self) -> int:
@@ -73,13 +80,39 @@ class Clinica:
 
     @codigo.setter
     def codigo(self, codigo: int) -> None:
-        if isinstance(codigo, int):
-            self.__codigo = codigo
+        if not isinstance(codigo, int) or isinstance(codigo, bool):
+            raise TypeError("O código da clínica deve ser inteiro.")
+        if codigo <= 0:
+            raise ValueError("O código da clínica deve ser positivo.")
+        self.__codigo = codigo
 
     @property
     def profissionais(self) -> list[Profissional]:
         # Cópia: a lista interna só é alterada por incluir/excluir.
         return list(self.__profissionais)
+
+    def esta_aberta(self, inicio: time, fim: time) -> bool:
+        """Regra de negócio: o intervalo [inicio, fim] cabe no funcionamento?
+        Aceita clínicas que viram a noite (ex.: abre 18:00, fecha 08:00) e
+        atendimentos que passam da meia-noite (ex.: 23:30 às 00:30).
+        Abertura igual ao fechamento significa clínica aberta 24 horas."""
+        abre = self.__minutos(self.__horario_abertura)
+        fecha = self.__minutos(self.__horario_fechamento)
+        if abre == fecha:
+            return True
+        if fecha < abre:                      # funcionamento vira a noite
+            fecha += self.__MINUTOS_POR_DIA
+        comeco = self.__minutos(inicio)
+        termino = self.__minutos(fim)
+        if termino <= comeco:                 # atendimento passa da meia-noite
+            termino += self.__MINUTOS_POR_DIA
+        if comeco < abre:                     # começa na madrugada do dia seguinte
+            comeco += self.__MINUTOS_POR_DIA
+            termino += self.__MINUTOS_POR_DIA
+        return abre <= comeco and termino <= fecha
+
+    def __minutos(self, horario: time) -> int:
+        return horario.hour * 60 + horario.minute
 
     def incluir_profissional(self, profissional: Profissional) -> None:
         if not isinstance(profissional, Profissional):

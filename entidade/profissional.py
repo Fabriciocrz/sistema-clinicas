@@ -7,8 +7,6 @@ class Profissional(Pessoa):
     def __init__(self, nome: str, celular: str, cpf: str,
                  especialidade: str, registro_profissional: str):
         super().__init__(nome, celular, cpf)
-        self.__especialidade = None
-        self.__registro_profissional = None
         self.especialidade = especialidade
         self.registro_profissional = registro_profissional
 
@@ -18,8 +16,11 @@ class Profissional(Pessoa):
 
     @especialidade.setter
     def especialidade(self, especialidade: str) -> None:
-        if isinstance(especialidade, str):
-            self.__especialidade = especialidade
+        if not isinstance(especialidade, str):
+            raise TypeError("A especialidade deve ser texto.")
+        if not especialidade.strip():
+            raise ValueError("A especialidade é obrigatória.")
+        self.__especialidade = especialidade.strip()
 
     @property
     def registro_profissional(self) -> str:
@@ -27,5 +28,8 @@ class Profissional(Pessoa):
 
     @registro_profissional.setter
     def registro_profissional(self, registro_profissional: str) -> None:
-        if isinstance(registro_profissional, str):
-            self.__registro_profissional = registro_profissional
+        if not isinstance(registro_profissional, str):
+            raise TypeError("O registro profissional deve ser texto.")
+        if not registro_profissional.strip():
+            raise ValueError("O registro profissional é obrigatório.")
+        self.__registro_profissional = registro_profissional.strip()

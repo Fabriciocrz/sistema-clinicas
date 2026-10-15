@@ -3,14 +3,11 @@ from datetime import date
 
 
 class Pagamento(ABC):
-    """Pagamento abstrato. Cada modalidade concreta define modalidade()
-    e detalhes(); as regras que envolvem o atendimento ficam em Atendimento."""
+    """Pagamento abstrato. Cada modalidade concreta define modalidade();
+    as regras que envolvem o atendimento ficam em Atendimento."""
 
     @abstractmethod
     def __init__(self, data: date, valor_pago: float, codigo: int):
-        self.__data = None
-        self.__valor_pago = 0.0
-        self.__codigo = None
         self.data = data
         self.valor_pago = valor_pago
         self.codigo = codigo
@@ -52,8 +49,3 @@ class Pagamento(ABC):
     @abstractmethod
     def modalidade(self) -> str:
         """Nome da modalidade (Dinheiro, Cartão, Pix)."""
-
-    @abstractmethod
-    def detalhes(self) -> dict:
-        """Dados próprios da modalidade (vazio no dinheiro). Evita que quem
-        usa o pagamento precise perguntar a classe com isinstance()."""

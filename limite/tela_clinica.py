@@ -19,9 +19,9 @@ class TelaClinica:
 
     def pega_dados_clinica(self) -> dict:
         print("\n-------- DADOS DA CLÍNICA --------")
-        nome = self.__le_texto("Nome: ")
-        cidade = self.__le_texto("Cidade: ")
-        descricao = self.__le_texto("Descrição: ")
+        nome = input("Nome: ")
+        cidade = input("Cidade: ")
+        descricao = input("Descrição: ")
         horario_abertura = self.__le_horario("Horário de abertura (HH:MM): ")
         horario_fechamento = self.__le_horario("Horário de fechamento (HH:MM): ")
         codigo = self.le_numero_tela("Código: ")
@@ -52,7 +52,7 @@ class TelaClinica:
         return self.le_numero_tela("Código da clínica: ")
 
     def seleciona_profissional(self) -> str:
-        return self.__le_cpf("CPF do profissional: ")
+        return input("CPF do profissional: ").replace(".", "").replace("-", "")
 
     def le_numero_tela(self, mensagem: str, numeros_validos: list = None) -> int:
         while True:
@@ -66,26 +66,9 @@ class TelaClinica:
                 if numeros_validos:
                     print("Opções disponíveis:", numeros_validos)
 
-    # ---------- métodos auxiliares de leitura/validação ----------
+    # ---------- conversão de texto para horário (papel da tela) ----------
 
-    @staticmethod
-    def __le_texto(mensagem: str) -> str:
-        while True:
-            valor = input(mensagem).strip()
-            if valor:
-                return valor
-            print("O valor não pode ser vazio.")
-
-    @staticmethod
-    def __le_cpf(mensagem: str) -> str:
-        while True:
-            cpf = input(mensagem).strip().replace(".", "").replace("-", "")
-            if cpf.isdigit() and len(cpf) == 11:
-                return cpf
-            print("CPF inválido. Digite os 11 dígitos.")
-
-    @staticmethod
-    def __le_horario(mensagem: str) -> time:
+    def __le_horario(self, mensagem: str) -> time:
         while True:
             try:
                 return time.fromisoformat(input(mensagem).strip())

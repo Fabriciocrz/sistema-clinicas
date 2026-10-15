@@ -11,6 +11,3 @@ class PagamentoDinheiro(Pagamento):
 
     def modalidade(self) -> str:
         return "Dinheiro"
-
-    def detalhes(self) -> dict:
-        return {}

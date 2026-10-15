@@ -6,8 +6,9 @@ from entidade.pagamento_pix import PagamentoPix
 from exceptions.pagamento_apos_atendimento_exception import PagamentoAposAtendimentoException
 from limite.tela_pagamento import TelaPagamento
 
-# Erros que o Model (Atendimento) lança quando uma regra é violada.
-ERROS_DE_NEGOCIO = (PagamentoAposAtendimentoException, ValueError, TypeError)
+# Dados inválidos e a Regra 3 (data do pagamento), as únicas que Atendimento
+# lança ao incluir ou trocar um pagamento. TypeError indica defeito e não é capturado.
+ERROS_DE_NEGOCIO = (ValueError, PagamentoAposAtendimentoException)
 
 
 class ControladorPagamento:
@@ -89,11 +90,9 @@ class ControladorPagamento:
         if pagamento is None:
             return
 
-        try:
-            atendimento.excluir_pagamento(pagamento.codigo)
-        except ERROS_DE_NEGOCIO as erro:
-            self.__tela_pagamento.mostra_mensagem(f"ATENÇÃO: {erro}")
-            return
+        # O pagamento acabou de ser escolhido na lista deste atendimento, então
+        # a exclusão não tem como falhar: não há erro de negócio a tratar aqui.
+        atendimento.excluir_pagamento(pagamento.codigo)
         self.__tela_pagamento.mostra_mensagem("Pagamento excluído com sucesso.")
         self.__tela_pagamento.mostra_resumo(self.__resumo(atendimento))
 
@@ -132,8 +131,7 @@ class ControladorPagamento:
         self.__tela_pagamento.mostra_mensagem("ATENÇÃO: pagamento não encontrado neste atendimento.")
         return None
 
-    @staticmethod
-    def __resumo(atendimento: Atendimento) -> dict:
+    def __resumo(self, atendimento: Atendimento) -> dict:
         """Números puros para a tela formatar (o enunciado pede o paciente
         no registro do pagamento e o cálculo do valor restante)."""
         return {
@@ -155,7 +153,12 @@ class ControladorPagamento:
                 "data": pagamento.data,
                 "valor_pago": pagamento.valor_pago,
             }
-            dados.update(pagamento.detalhes())          # polimorfismo, sem isinstance
+            # Campos próprios de cada modalidade (Dinheiro não tem nenhum).
+            if isinstance(pagamento, PagamentoCartao):
+                dados["numero_cartao"] = pagamento.numero_cartao
+                dados["bandeira"] = pagamento.bandeira
+            elif isinstance(pagamento, PagamentoPix):
+                dados["cpf_pagador"] = pagamento.cpf_pagador
             self.__tela_pagamento.mostra_pagamento(dados)
 
     def __codigo_em_uso(self, codigo: int, ignorar: Pagamento | None = None) -> bool:
@@ -167,8 +170,7 @@ class ControladorPagamento:
                     return True
         return False
 
-    @staticmethod
-    def __cria_pagamento(dados: dict) -> Pagamento:
+    def __cria_pagamento(self, dados: dict) -> Pagamento:
         """Cria a subclasse concreta conforme a chave de modalidade
         ('dinheiro', 'cartao' ou 'pix') devolvida pela tela."""
         modalidade = dados["modalidade"]

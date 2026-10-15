@@ -36,13 +36,11 @@ class ControladorProfissional:
                 "ATENÇÃO: já existe um profissional com esse CPF.")
             return
 
-        profissional = Profissional(
-            nome=dados["nome"],
-            celular=dados["celular"],
-            cpf=dados["cpf"],
-            especialidade=dados["especialidade"],
-            registro_profissional=dados["registro_profissional"],
-        )
+        try:
+            profissional = Profissional(**dados)  # a entidade valida cada campo
+        except ValueError as erro:
+            self.__tela_profissional.mostra_mensagem(f"ATENÇÃO: {erro}")
+            return
         self.__profissionais.append(profissional)
         self.__tela_profissional.mostra_mensagem("Profissional incluído com sucesso.")
 
@@ -61,6 +59,12 @@ class ControladorProfissional:
                 "ATENÇÃO: já existe um profissional com esse CPF.")
             return
 
+        try:
+            Profissional(**novos_dados)           # valida os dados sem tocar no profissional real
+        except ValueError as erro:
+            self.__tela_profissional.mostra_mensagem(f"ATENÇÃO: {erro}")
+            return
+
         profissional.nome = novos_dados["nome"]
         profissional.celular = novos_dados["celular"]
         profissional.cpf = novos_dados["cpf"]
@@ -74,7 +78,10 @@ class ControladorProfissional:
             return
 
         atendimentos = self.__controlador_sistema.controlador_atendimento.atendimentos
-        if any(atendimento.profissional is profissional for atendimento in atendimentos):
+        # Também verifica os procedimentos, que guardam o profissional que os realizou.
+        if any(atendimento.profissional is profissional
+               or any(p.profissional is profissional for p in atendimento.procedimentos)
+               for atendimento in atendimentos):
             self.__tela_profissional.mostra_mensagem(
                 "ATENÇÃO: não é possível excluir um profissional que possui atendimentos.")
             return
