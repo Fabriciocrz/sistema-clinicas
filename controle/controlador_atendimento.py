@@ -54,6 +54,9 @@ class ControladorAtendimento:
         if tipo_atendimento == None:
             self.__tela_atendimento.mostra_mensagem("Tipo de atendimento não encontrado")
             return
+        if profissional not in clinica.profissionais:
+            self.__tela_atendimento.mostra_mensagem("Profissional não está vinculado a essa clínica")
+            return
         if dados["horario_inicio"] >= dados["horario_fim"]:
             self.__tela_atendimento.mostra_mensagem("O horário de início tem que ser antes do horário de fim")
             return
@@ -115,6 +118,9 @@ class ControladorAtendimento:
             return
         if tipo_atendimento == None:
             self.__tela_atendimento.mostra_mensagem("Tipo de atendimento não encontrado")
+            return
+        if profissional not in clinica.profissionais:
+            self.__tela_atendimento.mostra_mensagem("Profissional não está vinculado a essa clinica")
             return
         if dados["horario_inicio"] >= dados["horario_fim"]:
             self.__tela_atendimento.mostra_mensagem("O horário de início tem que ser antes do horário de fim")
@@ -202,6 +208,10 @@ class ControladorAtendimento:
             self.__tela_atendimento.mostra_mensagem("Atendimento não encontrado")
             return
 
+        if len(atendimento.pagamentos) >= atendimento.numero_parcelas:
+            self.__tela_atendimento.mostra_mensagem("Atendimento já foi todo pago, não é possível mudar os procedimentos")
+            return
+
         dados = self.__tela_atendimento.pega_dados_procedimento()
 
         for procedimento in atendimento.procedimentos:
@@ -223,6 +233,10 @@ class ControladorAtendimento:
 
         if atendimento == None:
             self.__tela_atendimento.mostra_mensagem("atendimento não encontrado")
+            return
+
+        if len(atendimento.pagamentos) >= atendimento.numero_parcelas:
+            self.__tela_atendimento.mostra_mensagem("Atendimento já foi todo pago, não é possível mudar os procedimentos")
             return
 
         for procedimento in atendimento.procedimentos:
@@ -266,6 +280,10 @@ class ControladorAtendimento:
 
         if atendimento == None:
             self.__tela_atendimento.mostra_mensagem("Atendimento não encontrado")
+            return
+
+        if len(atendimento.pagamentos) >= atendimento.numero_parcelas:
+            self.__tela_atendimento.mostra_mensagem("Atendimento já foi todo pago, não é possível mudar os procedimentos")
             return
 
         for procedimento in atendimento.procedimentos:
