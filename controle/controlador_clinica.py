@@ -46,8 +46,12 @@ class ControladorClinica:
             self.__tela_clinica.mostra_mensagem("ATENÇÃO: o horário de abertura deve ser antes do horário de fechamento!")
             return
 
-        clinica = Clinica(dados["nome"], dados["cidade"], dados["descricao"],
-                          dados["horario_abertura"], dados["horario_fechamento"], dados["codigo"])
+        try:
+            clinica = Clinica(dados["nome"], dados["cidade"], dados["descricao"],
+                              dados["horario_abertura"], dados["horario_fechamento"], dados["codigo"])
+        except ValueError as erro:
+            self.__tela_clinica.mostra_mensagem(f"ATENÇÃO: {erro}")
+            return
         self.__clinicas.append(clinica)
         self.__tela_clinica.mostra_mensagem("Clínica incluída com sucesso!")
 
@@ -68,12 +72,16 @@ class ControladorClinica:
             self.__tela_clinica.mostra_mensagem("ATENÇÃO: o horário de abertura deve ser antes do horário de fechamento!")
             return
 
-        clinica.nome = novos_dados["nome"]
-        clinica.cidade = novos_dados["cidade"]
-        clinica.descricao = novos_dados["descricao"]
-        clinica.horario_abertura = novos_dados["horario_abertura"]
-        clinica.horario_fechamento = novos_dados["horario_fechamento"]
-        clinica.codigo = novos_dados["codigo"]
+        try:
+            clinica.nome = novos_dados["nome"]
+            clinica.cidade = novos_dados["cidade"]
+            clinica.descricao = novos_dados["descricao"]
+            clinica.horario_abertura = novos_dados["horario_abertura"]
+            clinica.horario_fechamento = novos_dados["horario_fechamento"]
+            clinica.codigo = novos_dados["codigo"]
+        except ValueError as erro:
+            self.__tela_clinica.mostra_mensagem(f"ATENÇÃO: {erro}")
+            return
         self.__tela_clinica.mostra_mensagem("Clínica alterada com sucesso!")
 
     def excluir_clinica(self) -> None:
